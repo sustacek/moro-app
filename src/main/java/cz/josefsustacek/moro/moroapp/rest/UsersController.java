@@ -3,6 +3,8 @@ package cz.josefsustacek.moro.moroapp.rest;
 import cz.josefsustacek.moro.moroapp.dto.UserData;
 import cz.josefsustacek.moro.moroapp.dto.User;
 import cz.josefsustacek.moro.moroapp.service.UserService;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -37,14 +39,14 @@ public class UsersController {
 
         return user.orElseThrow(
                 () -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "User not found: id = " + id));
+                        HttpStatus.NOT_FOUND, "User not found: id= " + id));
     }
 
     @PostMapping(
             value = "/users",
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public User createUser(
-            @RequestBody UserData userData) {
+            @Valid @RequestBody UserData userData) {
 
         return userService.createUser(userData);
     }
@@ -53,9 +55,14 @@ public class UsersController {
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public User updateUser(
             @PathVariable(name="id", required = true) long id,
-            @RequestBody UserData userData) {
+            @Valid @RequestBody UserData userData) {
 
-        return userService.updateUser(id, userData);
+        try {
+            return userService.updateUser(id, userData);
+        } catch (EntityNotFoundException enfe) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "User not found: id= " + id, enfe);
+        }
     }
 
     @GetMapping(
@@ -70,7 +77,12 @@ public class UsersController {
     public void deleteUser(
             @PathVariable(name = "id", required = true) long id) {
 
-        userService.deleteUser(id);
+        try {
+            userService.deleteUser(id);
+        } catch (EntityNotFoundException enfe) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "User not found: id= " + id, enfe);
+        }
     }
 
 }

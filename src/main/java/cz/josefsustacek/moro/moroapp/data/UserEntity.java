@@ -2,6 +2,8 @@ package cz.josefsustacek.moro.moroapp.data;
 
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import org.hibernate.validator.constraints.Length;
 
 @Entity(name="users")
@@ -16,6 +18,8 @@ public class UserEntity {
     )
     private Long id;
 
+    @NotNull
+    @Size(min = 1, max = 255)
     private String name;
 
     public Long getId() {

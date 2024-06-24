@@ -5,7 +5,9 @@ import cz.josefsustacek.moro.moroapp.data.UserEntity;
 import cz.josefsustacek.moro.moroapp.dto.UserData;
 import cz.josefsustacek.moro.moroapp.dto.User;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
@@ -27,7 +29,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User createUser(UserData userData) {
+    public User createUser(
+            @Valid UserData userData) {
+
         UserEntity newUser = fromUserData(userData, new UserEntity());
 
         newUser = userRepository.save(newUser);
@@ -36,7 +40,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User updateUser(long id, UserData userData) {
+    public User updateUser(
+            long id,
+            @Valid UserData userData) {
+
         var user = userRepository.findById(id);
 
         if (user.isPresent()) {
@@ -52,7 +59,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<User> findAll() {
-        return userRepository.findAll()
+        return userRepository.findAll(Sort.by("id"))
                 .stream()
                 .map(this::fromEntity)
                 .toList();
