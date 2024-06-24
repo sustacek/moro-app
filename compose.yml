@@ -17,6 +17,11 @@ services:
     #      size: 134217728 # 128*2^20 bytes = 128Mb
     ports:
       - "5432:5432"
+
+# Data initialization is done in the SpringBoot startup
+#    volumes:
+#      # Init script with the default DB's data
+#      - './src/main/postgres/:/docker-entrypoint-initdb.d/'
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres_pwd

@@ -14,3 +14,25 @@
       OpenJDK Runtime Environment Zulu17.38+21-CA (build 17.0.5+8-LTS)
       OpenJDK 64-Bit Server VM Zulu17.38+21-CA (build 17.0.5+8-LTS, mixed mode, sharing)
       ```
+     
+## Manual testing
+
+### Phase 1:
+Valid requests
+   1. http://localhost:8080/users/by-id?id=1
+   2. http://localhost:8080/users/by-id?id=2 ...
+
+Invalid requests
+   1. http://localhost:8080/users/by-id?id=123 (user of given id not found)
+   2. http://localhost:8080/users/by-id?id=abd (malformed param)
+   3. http://localhost:8080/users/by-id (mandatory param missing)
+   4. http://localhost:8080/users/by-idZZZ (malformed URI)
+
+
+## Hot-reload during development
+TODO does not work :-)
+
+Neat trick for development -- live reload of the SpringBoot app (
+[source](https://stackoverflow.com/questions/31512195/does-gradle-continuous-build-support-springboot/41878387#41878387)): 
+1. `./gradlew build --continuous` in one terminal
+2. `./gradlew bootRun` in second terminal
