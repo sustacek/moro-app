@@ -1,14 +1,19 @@
 package cz.josefsustacek.moro.moroapp.data;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+import jakarta.validation.Valid;
+import org.hibernate.validator.constraints.Length;
 
 @Entity(name="users")
 public class UserEntity {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "users_seq")
+    @SequenceGenerator(
+            name = "users_seq",
+            initialValue = 50   // we have some data put into a clean schema, so make
+                                // sure they have some space for their ids (1, 2, ...)
+    )
     private Long id;
 
     private String name;
@@ -20,4 +25,13 @@ public class UserEntity {
     public String getName() {
         return name;
     }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
 }

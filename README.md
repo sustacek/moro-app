@@ -18,15 +18,54 @@
 ## Manual testing
 
 ### Phase 1:
+
 Valid requests
-   1. http://localhost:8080/users/by-id?id=1
-   2. http://localhost:8080/users/by-id?id=2 ...
+   1. GET http://localhost:8080/users/by-id?id=1 (the spec said "id from URL parameter")
+   2. GET http://localhost:8080/users/by-id?id=2
+   
+Bonus: 
+   3. GET http://localhost:8080/users/1 (the way-nicer version, id from path)
 
 Invalid requests
-   1. http://localhost:8080/users/by-id?id=123 (user of given id not found)
-   2. http://localhost:8080/users/by-id?id=abd (malformed param)
-   3. http://localhost:8080/users/by-id (mandatory param missing)
-   4. http://localhost:8080/users/by-idZZZ (malformed URI)
+   1. GET http://localhost:8080/users/by-id?id=123 (user of given id not found)
+   2. GET http://localhost:8080/users/by-id?id=abd (malformed param)
+   3. GET http://localhost:8080/users/by-id (mandatory param missing)
+   4. GET http://localhost:8080/users/by-idZZZ (malformed URI)
+
+### Phase 2
+
+Valid requests (
+   1. POST http://localhost:8080/users
+      * create new user
+      * you need to provide body of the request as the details of the user)
+      * request body: 
+        ```json
+        { "name": "James" }
+        ```
+        
+   2. POST http://localhost:8080/users/1
+      * update user with `id == 1`
+      * you need to provide the body of the request as the details of the user)
+      * request body:
+        ```json
+        { "name": "James" }
+        ```
+        
+   3. GET http://localhost:8080/users
+      * returns list of all users
+      * response body: 
+        ```json
+        [
+          { "id": 1, "name": "James" },
+          { "id": 2, "name": "Josephine" }
+        ]
+        ```
+        
+   4. DELETE http://localhost:8080/users/1
+       * delete user with `id == 1`, if it exists   
+
+
+   
 
 
 ## Hot-reload during development
