@@ -1,7 +1,7 @@
 package cz.josefsustacek.moro.moroapp.service;
 
 import cz.josefsustacek.moro.moroapp.dao.UserRepository;
-import cz.josefsustacek.moro.moroapp.data.UserEntity;
+import cz.josefsustacek.moro.moroapp.model.UserEntity;
 import cz.josefsustacek.moro.moroapp.dto.UserData;
 import cz.josefsustacek.moro.moroapp.dto.User;
 import jakarta.persistence.EntityNotFoundException;
