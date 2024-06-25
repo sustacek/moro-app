@@ -138,7 +138,16 @@ And then validation _on backend_: on the JPA entities, validated when they are a
           }
         ```        
 
-### Phase 4 (extras)
+### Phase 4 (extra)
+
+**Extras in the app**
+
+I've added a password-rest URI
+* POST http://localhost:8080/resetUserPassword/603
+    * random password is generated, hashed and updated for the user in DB (only the hash is stored) and clear-text password is printed into server log
+    * the password could be emailed to the user instead
+    * or the endpoint could generate a time-limited reset link, email it to the user who would then set a new password manually in the UI
+
 * secure-by-default (whitelist)
   * everything requires authentication by default 
   * only following endpoints are allowed even without auth
@@ -148,12 +157,40 @@ And then validation _on backend_: on the JPA entities, validated when they are a
       * POST http://localhost:8080/error so that error handling does not prompt the Basic auth login dialog
   * CSRF was disabled for now, to keep it easy for now and not require a roundtrip to get the token before the acutall call
 
+* added compose.yml with simple Docker Compose to run the DB
+  * latest Postgres + Adminer UI to access the DB
+  * easy to use by anyone, only JDK17 required to build and run the app itself, the rest is hidden in Docker containers
+* this whole docs describing the app, its use and implementation details
 
-#### Password reset link:
-* POST http://localhost:8080/resetUserPassword/603
-    * updated and clear-text value printed into server log 
-#### Docs   
+**Tips for the future**
 
+* Dockerize the Spring Boot app and start it in Docker container even in development
+  * this would remove the need to have JDK17 installed in the OS and used by Gradle
+
+* add _authorization_ on top of authentication
+  * e.g. create some RBAC system -- introduce _roles_ table and map the users 1-to-many to the roles
+  * give each role different privileges within the app
+  * pass the list of roles of a user to Spring Security as the _authorities_ in our `RepositoryBackedUserDetailsService` class 
+  * this will allow users (holding only the role USER after successful login) to only update themselves while some ADMIN user(s) update / delete anyone
+
+* Tests! 
+  * There are currently none, but some more complicated pieces of code should be covered by unit tests. Then some integration tests across all the layers (using some embedded DB for testing on top of various states of the DB, sending HTTP to the REST endpoints).
+  * like in this example: https://howtodoinjava.com/spring-boot2/testing/rest-controller-unit-test-example/
+
+Describe the API using some schema / industry standard. OpenAPI, Swagger or similar. This will also make it easier to test.
+
+**Deployment, runtime**
+
+* package the app as a Docker image, create releases in some repo (docker repository)
+* create a Dockerfile, basing it on some stable JDK17 image, build the app + add the app jars
+* define clear configuration points, like the DB host:port and credentials, passing the secrets from the runtime environment and not storing it in the sources
+
+**Automatization**
+
+* Set up CI/CD (GitHub Actions, Jenkins or similar)
+* in CI - build, run tests, create an immutable release
+* check code quality - Sonar, FindBugs, run on every PR etc.
+* enable automatic and continuous vulnerability testing -- using libraries with known flaws discovered after the code was commited
 
 ## Hot-reload during development
 TODO does not work :-)
