@@ -3,7 +3,7 @@ package cz.josefsustacek.moro.moroapp.service;
 import cz.josefsustacek.moro.moroapp.dao.UserRepository;
 import cz.josefsustacek.moro.moroapp.dto.NewUserFields;
 import cz.josefsustacek.moro.moroapp.model.UserEntity;
-import cz.josefsustacek.moro.moroapp.dto.UserData;
+import cz.josefsustacek.moro.moroapp.dto.UserDataInput;
 import cz.josefsustacek.moro.moroapp.dto.User;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
@@ -43,9 +43,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User createUser(
-            @Validated({Default.class, NewUserFields.class}) UserData userData) {
+            @Validated({Default.class, NewUserFields.class}) UserDataInput userDataInput) {
 
-        UserEntity newUser = fromUserDataInput(userData, new UserEntity());
+        UserEntity newUser = fromUserDataInput(userDataInput, new UserEntity());
 
         newUser = userRepository.save(newUser);
 
@@ -59,12 +59,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public User updateUser(
             long id,
-            @Valid UserData userData) {
+            @Valid UserDataInput userDataInput) {
 
         var user = userRepository.findById(id);
 
         if (user.isPresent()) {
-            var userEntity = fromUserDataInput(userData, user.get());
+            var userEntity = fromUserDataInput(userDataInput, user.get());
 
             userEntity = userRepository.save(userEntity);
 
@@ -124,7 +124,7 @@ public class UserServiceImpl implements UserService {
         return null;
     }
 
-    private UserEntity fromUserDataInput(UserData sourceInput, UserEntity target) {
+    private UserEntity fromUserDataInput(UserDataInput sourceInput, UserEntity target) {
         Objects.requireNonNull(sourceInput);
         Objects.requireNonNull(target);
 

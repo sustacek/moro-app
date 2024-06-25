@@ -1,7 +1,7 @@
 package cz.josefsustacek.moro.moroapp.rest;
 
 import cz.josefsustacek.moro.moroapp.dto.NewUserFields;
-import cz.josefsustacek.moro.moroapp.dto.UserData;
+import cz.josefsustacek.moro.moroapp.dto.UserDataInput;
 import cz.josefsustacek.moro.moroapp.dto.User;
 import cz.josefsustacek.moro.moroapp.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
@@ -50,10 +50,10 @@ public class UsersController {
             consumes = MediaType.APPLICATION_JSON_VALUE)
     // Validate using both the default restrictions both as the extra ones for new users
     public User createUser(
-            @Validated({Default.class, NewUserFields.class}) @RequestBody UserData userData) {
+            @Validated({Default.class, NewUserFields.class}) @RequestBody UserDataInput userDataInput) {
 
         try {
-            return userService.createUser(userData);
+            return userService.createUser(userDataInput);
         } catch (DataIntegrityViolationException e) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -65,10 +65,10 @@ public class UsersController {
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public User updateUser(
             @PathVariable(name="id", required = true) long id,
-            @Validated @RequestBody UserData userData) {
+            @Validated @RequestBody UserDataInput userDataInput) {
 
         try {
-            return userService.updateUser(id, userData);
+            return userService.updateUser(id, userDataInput);
         } catch (EntityNotFoundException enfe) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "User not found: id= " + id, enfe);

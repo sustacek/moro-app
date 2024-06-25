@@ -13,7 +13,7 @@ import jakarta.validation.constraints.Size;
  * @param passwordRepeated
  */
 // The validation is the same as on the respective entity's fields and must be kept in sync manually.
-public record UserData(
+public record UserDataInput(
         // Can be null during update, meaning user does not want to update the name
         @NotNull(groups = NewUserFields.class)
         @Size(min = 1, max = 255)
