@@ -3,7 +3,15 @@
 
 -- NOTE: Make sure the manually inserted IDs in this file don't overlap with the sequence start
 -- , see UserEntity (defaults to 50)
-INSERT INTO users (id, name) VALUES (1, 'Petr') ON CONFLICT DO NOTHING;
-INSERT INTO users (id, name) VALUES (2, 'Jana') ON CONFLICT DO NOTHING;
-INSERT INTO users (id, name) VALUES (3, 'Olga') ON CONFLICT DO NOTHING;
-INSERT INTO users (id, name) VALUES (4, 'Martin') ON CONFLICT DO NOTHING;
+INSERT INTO users
+    (id,    name,       username,   password_hash) VALUES
+    (1,     'Petr',     'petr321',  'hash1' ) ON CONFLICT DO NOTHING;
+INSERT INTO users
+    (id,    name,       username,   password_hash) VALUES
+    (2,     'Jana',     'janicka',  'hash2') ON CONFLICT DO NOTHING;
+INSERT INTO users
+    (id,    name,       username,   password_hash) VALUES
+    (3,     'Olga',     'o111',     'hash3') ON CONFLICT DO NOTHING;
+INSERT INTO users
+    (id,    name,       username,   password_hash) VALUES
+    (4,     'Martin',   'martas',   'hash4') ON CONFLICT DO NOTHING;

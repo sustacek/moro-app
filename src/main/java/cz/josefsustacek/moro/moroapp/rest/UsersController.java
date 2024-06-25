@@ -62,6 +62,9 @@ public class UsersController {
         } catch (EntityNotFoundException enfe) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "User not found: id= " + id, enfe);
+        } catch (Exception e) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "User cannot be updated: " + e.getMessage(), e);
         }
     }
 
