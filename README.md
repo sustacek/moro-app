@@ -77,18 +77,23 @@ Returns:
        * since Spring Data does not complain if given ID does not exist in persistence (and silently does nothing), no error is thrown into the UI either
 
 **Validation**
-First on frontend:
- * Various `jakarta.validation.constraints.*` types used on the UserDataInput fields, method-level validation used on the REST controller.
- * same object is used for create and update, which different validation group used for the restrictions which should only be used during create (all fields mandatory) and not during update (user is not forced to e.g. update password with every request; also the app support updating a subset of fields)
 
-And then validation on backend: on the JPA entities, validated when they are about to be stored into the DB.
+First _on frontend_:
+ * Various `jakarta.validation.constraints.*` types used on the UserDataInput fields, method-level validation used on the REST controller (using `MethodValidationPostProcessor` and `LocalValidatorFactoryBean`).
+ * same object is used for _create_ and _update_ operations, reusing the validation rules. But different validation group is used for the restrictions which should only be checked during create (~ all fields mandatory) and not during update (~ user is not forced to e.g. update password with every request; also the app supports updating a subset of fields for a user, so that unmodified fields don't hav eto be listed).
+
+And then validation _on backend_: on the JPA entities, validated when they are about to be stored into the DB.
 
 ### Phase 3
 
-* `password` field is storing hashed passwords, with salt, using the default recommended `PasswordEncoder` from Spring Security
+* `password` field is storing hashed passwords, with salt, created using the default (recommended) `PasswordEncoder` from Spring Security, defaulting to bcrypt for new users
 * Spring Security enabled, Basic Auth on selected paths
-* POST http://localhost:8080/users/{id} only usable for authenticated users (but anyone can update anyone else, not just themselves...)
-* DELETE http://localhost:8080/users/{1} only usable for authenticated users (but anyone can delete anyone else, not just themselves...)
+* POST http://localhost:8080/users/{id} 
+  * only usable for authenticated users
+  * but anyone can update anyone else, not just themselves...
+* DELETE http://localhost:8080/users/{1}
+  * only usable for authenticated users
+  * but anyone can delete anyone else, not just themselves...)
 * creating user
     * => all fields are mandatory (input is read as JSON in the request body);
       ```json
