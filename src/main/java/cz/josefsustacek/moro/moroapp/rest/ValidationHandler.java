@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -32,13 +31,16 @@ public class ValidationHandler extends ResponseEntityExceptionHandler {
             HttpStatusCode status,
             WebRequest request) {
 
+        // One fields may have multiple errors, so we need a merge function as well
         Map<String, String> errorsByField =
                 ex.getBindingResult().getAllErrors()
                         .stream()
                         .collect(
                                 Collectors.toMap(
                                         oe -> ((FieldError) oe).getField(),
-                                        ObjectError::getDefaultMessage));
+                                        ObjectError::getDefaultMessage,
+                                        (e1, e2) -> e1 + " & " + e2)
+                        );
 
         return new ResponseEntity<>(errorsByField, HttpStatus.BAD_REQUEST);
     }
