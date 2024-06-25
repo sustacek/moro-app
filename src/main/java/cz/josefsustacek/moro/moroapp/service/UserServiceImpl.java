@@ -1,23 +1,23 @@
 package cz.josefsustacek.moro.moroapp.service;
 
 import cz.josefsustacek.moro.moroapp.dao.UserRepository;
-import cz.josefsustacek.moro.moroapp.digest.HashGenerator;
-import cz.josefsustacek.moro.moroapp.dto.UserPasswordInput;
+import cz.josefsustacek.moro.moroapp.dto.NewUserFields;
 import cz.josefsustacek.moro.moroapp.model.UserEntity;
 import cz.josefsustacek.moro.moroapp.dto.UserData;
 import cz.josefsustacek.moro.moroapp.dto.User;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
+import jakarta.validation.groups.Default;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Sort;
 import org.springframework.lang.Nullable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @Service
@@ -25,9 +25,12 @@ public class UserServiceImpl implements UserService {
 
     Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
+    public static final String PASSWORD_PLACEHOLDER = "***";
+
     @Autowired
     private UserRepository userRepository;
 
+    // The same encoded used in the spring Security config to authenticate users (see SecurityConfig -> UserDetailsService)
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -40,13 +43,17 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User createUser(
-            @Valid UserData userData) {
+            @Validated({Default.class, NewUserFields.class}) UserData userData) {
 
-        UserEntity newUser = fromUserData(userData, new UserEntity());
+        UserEntity newUser = fromUserDataInput(userData, new UserEntity());
 
         newUser = userRepository.save(newUser);
 
-        return fromEntity(newUser);
+        var dto = fromEntity(newUser);
+
+        logger.info("User was created: {}", dto);
+
+        return dto;
     }
 
     @Override
@@ -57,11 +64,15 @@ public class UserServiceImpl implements UserService {
         var user = userRepository.findById(id);
 
         if (user.isPresent()) {
-            var userEntity = fromUserData(userData, user.get());
+            var userEntity = fromUserDataInput(userData, user.get());
 
             userEntity = userRepository.save(userEntity);
 
-            return fromEntity(userEntity);
+            var dto = fromEntity(userEntity);
+
+            logger.info("User was updated: {}", dto);
+
+            return dto;
         } else {
             throw new EntityNotFoundException("User not found: id= " + id);
         }
@@ -77,38 +88,65 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUser(long id) {
+        // will silently do nothing when ID is not found, which is okay I guess
         userRepository.deleteById(id);
+
+        logger.info("User was deleted: id= {}", id);
+    }
+
+    @Override
+    public void resetPassword(long id) {
+        var user = userRepository.findById(id);
+
+        var userEntity = user.orElseThrow(() -> new EntityNotFoundException("User not found: id= " + id));
+
+        // ugly, but works
+        var randomPassword = UUID.randomUUID().toString();
+        var randomPasswordHash = passwordEncoder.encode(randomPassword);
+
+        userEntity.setPasswordHash(randomPasswordHash);
+        userRepository.save(userEntity);
+
+        logger.info("The password of user id= {} (username= {}) was reset: {}", userEntity.getId(), userEntity.getUsername(), randomPassword);
     }
 
     private @Nullable User fromEntity(
             @Nullable UserEntity userEntity) {
 
-        return Optional.ofNullable(userEntity)
-                .map(e ->
-                        new User(
-                                e.getId(),
-                                e.getName(),
-                                e.getUsername()))
-                .orElse(null);
+        if (Objects.nonNull(userEntity)) {
+            return new User(
+                    userEntity.getId(),
+                    userEntity.getName(),
+                    userEntity.getUsername(),
+                    PASSWORD_PLACEHOLDER);
+        }
+
+        return null;
     }
 
-    private UserEntity fromUserData(UserData userData, UserEntity target) {
-        Objects.requireNonNull(userData);
+    private UserEntity fromUserDataInput(UserData sourceInput, UserEntity target) {
+        Objects.requireNonNull(sourceInput);
         Objects.requireNonNull(target);
 
-        // basic fields, mandatory
-        target.setName(userData.name());
-        target.setUsername(userData.username());
+        // basic fields, update if present in input
+        Optional.ofNullable(sourceInput.name()).ifPresent((newValue) -> target.setName(newValue));
+        Optional.ofNullable(sourceInput.username()).ifPresent((newValue) -> target.setUsername(newValue));
 
-        // the optional fields
-        UserPasswordInput passwordInput;
-        if ((passwordInput = userData.password()) != null && (passwordInput.value() != null)) {
-            if (!passwordInput.value().equals(passwordInput.valueRepeated())) {
-                throw new ConstraintViolationException(
-                        "The passwords do not match", Collections.emptySet());
+        // special handling on the password fields
+        String password = sourceInput.password(), passwordRepeated = sourceInput.passwordRepeated();
+
+        if (Objects.nonNull(password)) {
+            // TODO checks could probably be expressed using validation annotations as well,
+            //  but this is easier solution for now
+            if (Objects.isNull(passwordRepeated)) {
+                throw new DataIntegrityViolationException("If setting 'password', 'passwordRepeated' is mandatory.");
             }
 
-            target.setPasswordHash(passwordEncoder.encode(passwordInput.value()));
+            if (!password.equals(passwordRepeated)) {
+                throw new DataIntegrityViolationException("The fields 'password' and 'passwordRepeated' do not match.");
+            }
+
+            target.setPasswordHash(passwordEncoder.encode(password));
         }
 
         return target;

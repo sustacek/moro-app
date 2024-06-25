@@ -20,6 +20,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.password.Pbkdf2PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
@@ -38,15 +39,19 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        //  // we want to allow unauthenticated POST to create a new user, so disable csrf for /users
-        // inspiration: https://stackoverflow.com/a/63962985
         http
+                // csrf is enabled by default on all POST / DELETE requests, since they change the data in backend
                 .csrf(csfr ->
-                        csfr.disable()) //
+                        csfr.disable()) //  let's not overcomplicate things for now, but definitely enable in next iteration;
                 .authorizeHttpRequests((requests) -> requests
+                        // enable selected URIs
                         .requestMatchers(HttpMethod.GET, "/users").permitAll()
                         .requestMatchers(HttpMethod.GET, "/users/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users").permitAll() // URI to create new user
+                        .requestMatchers("/error").permitAll()
+                        .requestMatchers("/resetUserPassword/**").permitAll()
+
+                         // require auth for everything else
                         .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults())
@@ -58,7 +63,7 @@ public class SecurityConfig {
 
     @Bean
     public static PasswordEncoder encoder() {
-        return Pbkdf2PasswordEncoder.defaultsForSpringSecurity_v5_8();
+        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
 }
